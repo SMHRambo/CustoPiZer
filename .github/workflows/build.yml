@@ -28,49 +28,48 @@ jobs:
       packages: write
       attestations: write
       id-token: write
-  
+
     steps:
-    - name: "⬇ Checkout"
-      uses: actions/checkout@v4
+      - name: "⬇ Checkout"
+        uses: actions/checkout@v6
 
-    - name: "🐳 Login to GHCR"
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: "🐳 Login to GHCR"
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: 🔍️ Determine metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
+      - name: 🔍️ Determine metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
-    - name: "🐳 Set up Docker Buildx"
-      uses: docker/setup-buildx-action@v3
+      - name: "🐳 Set up Docker Buildx"
+        uses: docker/setup-buildx-action@v3
 
-    - name: "🏗 Build & push by digest"
-      id: docker_build
-      uses: docker/build-push-action@v6
-      with:
-        context: ./src
-        platforms: linux/amd64,linux/arm64
+      - name: "🏗 Build & push by digest"
+        id: docker_build
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src
+          platforms: linux/amd64,linux/arm64
 
-        # metadata
-        labels: ${{ steps.meta.outputs.labels }}
+          # metadata
+          labels: ${{ steps.meta.outputs.labels }}
 
-        # inline cache
-        cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:${{ env.DOCKER_METADATA_OUTPUT_VERSION }}
-        cache-to: type=inline
+          # inline cache
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:${{ env.DOCKER_METADATA_OUTPUT_VERSION }}
+          cache-to: type=inline
 
-        # export
-        outputs: type=image,"name=${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
-
+          # export
+          outputs: type=image,"name=${{ env.IMAGE_NAME }}",push-by-digest=true,name-canonical=true,push=true
 
   test:
     name: "🧪 Test"
@@ -79,14 +78,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ "ubuntu-latest", "ubuntu-22.04-arm" ]
-        arch: [ "armhf", "arm64" ]
+        os: ["ubuntu-latest", "ubuntu-22.04-arm"]
+        arch: ["armhf", "arm64"]
 
     runs-on: "${{ matrix.os }}"
 
     steps:
       - name: "⬇ Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: "🛠 Prepare workspace with a fresh RPi lite image"
         shell: bash
@@ -142,11 +141,11 @@ jobs:
           workspace: ${{ github.workspace }}/workspace
           scripts: ${{ github.workspace }}/scripts
           environment: '{ "EDITBASE_ARCH": "${{ env.EDITBASE_ARCH }}" }'
-          custopizer: '${{ needs.build.outputs.digest }}'
+          custopizer: "${{ needs.build.outputs.digest }}"
 
   deploy:
     name: "📦 Deploy"
-    needs: 
+    needs:
       - build
       - test
     runs-on: "ubuntu-latest"
@@ -166,7 +165,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-  
+
       - name: 🔍️ Determine metadata
         id: meta
         uses: docker/metadata-action@v5
