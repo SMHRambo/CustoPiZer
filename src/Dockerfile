@@ -3,10 +3,18 @@ ARG VERSION="trixie"
 FROM debian:${VERSION}
 ARG VERSION
 
-ENV PACKAGES="qemu-system qemu-user-static binfmt-support build-essential lsof sudo util-linux fdisk"
+ENV PACKAGES="binfmt-support \
+    build-essential \
+    fdisk \
+    lsof \
+    qemu-system \
+    qemu-user-static \
+    sudo \
+    util-linux"
 
 RUN set -ex \
     && apt-get update \
+    && apt-get upgrade --yes \
     && apt-get install --no-install-recommends --yes ${PACKAGES} \
     && apt-get autoremove \
     && rm -rf /var/lib/apt/lists/*
